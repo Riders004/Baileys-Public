@@ -8,7 +8,6 @@ import { BufferJSON, unpadRandomMax16 } from './generics'
 const NO_MESSAGE_FOUND_ERROR_TEXT = 'Message absent from node'
 
 type MessageType = 'chat' | 'peer_broadcast' | 'other_broadcast' | 'group' | 'direct_peer_status' | 'other_status' | 'newsletter'
-type NewsletterType = 'poll' | 'text'
 
 /**
  * Decode the received node as a message.
@@ -168,7 +167,7 @@ export const decryptMessageNode = (
 								ciphertext: content
 							})
 							break
-						case 'plaintext':
+						case undefined:
 							msgBuffer = content
 							break
 						default:
