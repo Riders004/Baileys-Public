@@ -2,12 +2,13 @@ import { Boom } from '@hapi/boom'
 import { Logger } from 'pino'
 import { proto } from '../../WAProto'
 import { SignalRepository, WAMessageKey } from '../Types'
-import { areJidsSameUser, BinaryNode, isJidBroadcast, isJidGroup, isJidStatusBroadcast, isJidUser, isLidUser } from '../WABinary'
+import { areJidsSameUser, BinaryNode, isJidBroadcast, isJidGroup, isJidNewsletter, isJidStatusBroadcast, isJidUser, isLidUser } from '../WABinary'
 import { BufferJSON, unpadRandomMax16 } from './generics'
 
 const NO_MESSAGE_FOUND_ERROR_TEXT = 'Message absent from node'
 
-type MessageType = 'chat' | 'peer_broadcast' | 'other_broadcast' | 'group' | 'direct_peer_status' | 'other_status'
+type MessageType = 'chat' | 'peer_broadcast' | 'other_broadcast' | 'group' | 'direct_peer_status' | 'other_status' | 'newsletter'
+type NewsletterType = 'poll' | 'text'
 
 /**
  * Decode the received node as a message.
@@ -64,6 +65,10 @@ export function decodeMessageNode(
 		msgType = 'group'
 		author = participant
 		chatId = from
+	} else if(isJidNewsletter(from)){
+		msgType = 'newsletter'
+		author = from
+		chatId = from
 	} else if(isJidBroadcast(from)) {
 		if(!participant) {
 			throw new Boom('No participant in group message')
@@ -83,7 +88,7 @@ export function decodeMessageNode(
 	}
 
 	const fromMe = (isLidUser(from) ? isMeLid : isMe)(stanza.attrs.participant || stanza.attrs.from)
-	const pushname = stanza.attrs.notify
+	const pushname = stanza?.attrs?.notify
 
 	const key: WAMessageKey = {
 		remoteJid: chatId,
@@ -132,7 +137,7 @@ export const decryptMessageNode = (
 						fullMessage.verifiedBizName = details.verifiedName
 					}
 
-					if(tag !== 'enc') {
+					if(tag !== 'enc' && tag !== 'plaintext') {
 						continue
 					}
 
@@ -163,11 +168,14 @@ export const decryptMessageNode = (
 								ciphertext: content
 							})
 							break
+						case 'plaintext':
+							msgBuffer = content
+							break
 						default:
 							throw new Error(`Unknown e2e type: ${e2eType}`)
 						}
 
-						let msg: proto.IMessage = proto.Message.decode(unpadRandomMax16(msgBuffer))
+						let msg: proto.IMessage = proto.Message.decode(tag === 'plaintext' ? msgBuffer : unpadRandomMax16(msgBuffer))
 						msg = msg.deviceSentMessage?.message || msg
 						if(msg.senderKeyDistributionMessage) {
 						    try {
