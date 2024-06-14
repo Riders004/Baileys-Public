@@ -33,10 +33,10 @@ export function makeLibSignalRepository(auth: SignalAuthState): SignalRepository
 			let result: Buffer
 			switch (type) {
 			case 'pkmsg':
-				result = await session.decryptPreKeyWhisperMessage(ciphertext as Buffer)
+				result = await session.decryptPreKeyWhisperMessage(ciphertext)
 				break
 			case 'msg':
-				result = await session.decryptWhisperMessage(ciphertext as Buffer)
+				result = await session.decryptWhisperMessage(ciphertext)
 				break
 			}
 
