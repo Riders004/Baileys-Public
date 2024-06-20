@@ -404,6 +404,7 @@ export const generateWAMessageContent = async(
 		m.pinInChatMessage.senderTimestampMs = Date.now()
 
 		m.messageContextInfo.messageAddOnDurationInSecs = message.time || 86400
+		m.messageContextInfo.messageAddOnExpireType = 1
 	} else if('unpin' in message){
 		m.pinInChatMessage = {}
 		m.messageContextInfo = {}
@@ -413,6 +414,7 @@ export const generateWAMessageContent = async(
 		m.pinInChatMessage.senderTimestampMs = Date.now()
 
 		m.messageContextInfo.messageAddOnDurationInSecs = 0
+		m.messageContextInfo.messageAddOnExpireType = 1
 	} else if('buttonReply' in message) {
 		switch (message.type) {
 		case 'template':
